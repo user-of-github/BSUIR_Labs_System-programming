@@ -1,25 +1,46 @@
-﻿#ifndef UNICODE
+﻿// https://learn.microsoft.com/en-us/windows/win32/controls/cookbook-overview
+#pragma comment(linker,"\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+#ifndef UNICODE
 #define UNICODE
 #endif 
 
 #include <windows.h>
 #include <utility>
+#include "./constants.h"
 
 
 WNDCLASSEX configure_window_characteristics(const HINSTANCE&);
-HWND configure_handle(const WNDCLASSEX&, const std::pair<int, int>&, const std::pair<int, int>&, const LPCWSTR&);
 
 
 int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR szCmdLine, int nCmdShow)
 {
-	WNDCLASSEX window_characteristics{ configure_window_characteristics(hInstance) };
+	WNDCLASSEX   window_characteristics{ configure_window_characteristics(hInstance) };
 
-	if (!RegisterClassEx(&window_characteristics)) 
+	if (!RegisterClassEx(&window_characteristics))
 		return EXIT_FAILURE;
 
-	const HWND window_handle{ configure_handle(window_characteristics, {100, 100}, {500, 500}, L"First window!")};
+	const HWND window_handle{ CreateWindow(
+		window_characteristics.lpszClassName,
+		kMainWindowTitle,
+		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX,
+		kMainWindowX, kMainWindowY, kMainWindowWidth, kMainWindowHeight,
+		nullptr, nullptr,
+		window_characteristics.hInstance,
+		nullptr
+	) };
 
-	if (window_handle == INVALID_HANDLE_VALUE) 
+	const HWND button_handle{ CreateWindow(
+		kButtonSetSizeClass,
+		kButtonSetSizeTitle,
+		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		kButtonSetSizeX, kButtonSetSizeY, kButtonSetSizeWidth, kButtonSetSizeHeight,
+		window_handle,	reinterpret_cast<HMENU>(kButtonSetSizeId), nullptr, nullptr
+	) };
+
+	if (window_handle == INVALID_HANDLE_VALUE)
 		return EXIT_FAILURE;
 
 	ShowWindow(window_handle, nCmdShow);
@@ -37,13 +58,13 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR szCmdLine, int nCmdS
 }
 
 
-WNDCLASSEX configure_window_characteristics(const HINSTANCE &hInstance)
+WNDCLASSEX configure_window_characteristics(const HINSTANCE& hInstance)
 {
 	WNDCLASSEX response{ sizeof(WNDCLASSEX) };
 
 	response.cbClsExtra = response.cbWndExtra = 0; // additional extraction of memory
 
-	response.hbrBackground = reinterpret_cast<HBRUSH>(GetStockObject(DKGRAY_BRUSH));
+	response.hbrBackground = reinterpret_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
 	response.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	response.hIcon = response.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
 
@@ -56,37 +77,49 @@ WNDCLASSEX configure_window_characteristics(const HINSTANCE &hInstance)
 	response.lpfnWndProc = [](HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> LRESULT {
 		switch (uMsg)
 		{
-			case WM_DESTROY:
+		case WM_DESTROY:
+		{
+			PostQuitMessage(EXIT_SUCCESS);
+		}
+		return 0;
+
+		case WM_SHOWWINDOW:
+		{
+			MessageBox(hWnd, L"Welcome to WinAPI !\nThe program will launch now !", L"Some message for you", NULL);
+		}
+		return 0;
+
+		case WM_SIZE:
+		{
+			const std::size_t new_width{ LOWORD(lParam) };
+			const std::size_t new_height{ HIWORD(lParam) };
+		}
+		return 0;
+			
+		case WM_COMMAND:
+		{
+			const auto id_pressed{ LOWORD(wParam) };
+			
+			switch (id_pressed)
 			{
-				PostQuitMessage(EXIT_SUCCESS);
+			case kButtonSetSizeId:
+				MessageBox(hWnd, kMessageBoxButtonSetSizeClickedText, nullptr, NULL);
+				SetWindowPos(
+					hWnd, 
+					nullptr, 
+					kMainWindowX, kMainWindowY, kMainWindowWidth, kMainWindowHeight, 
+					SWP_DRAWFRAME
+				);
+				break;
 			}
+		}
 		return 0;
 		}
-
+			
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	};
 
 	return response;
-}
-
-HWND configure_handle(const WNDCLASSEX& characteristics, 
-	const std::pair<int, int> &coordinates, 
-	const std::pair<int, int> &dimensions, 
-	const LPCWSTR &title)
-{
-	return CreateWindow(
-		characteristics.lpszClassName,
-		title,
-		WS_OVERLAPPEDWINDOW,
-		coordinates.first,
-		coordinates.second,
-		dimensions.first,
-		dimensions.second,
-		nullptr,
-		nullptr,
-		characteristics.hInstance,
-		nullptr
-	);
 }
 
 
@@ -105,4 +138,11 @@ wWinMain => entry point
 ABOUT HWND window handle:
 
 pointer to place for information about window (descriptor, kernel object)
+*/
+
+
+/*
+Events are driven with window messages.
+Everything is a window (button, window, scrollbar...)
+
 */
