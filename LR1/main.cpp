@@ -12,6 +12,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #include "./constants.h"
 
 
+
 WNDCLASSEX configure_window_characteristics(const HINSTANCE&);
 
 
@@ -95,19 +96,19 @@ WNDCLASSEX configure_window_characteristics(const HINSTANCE& hInstance)
 			const std::size_t new_height{ HIWORD(lParam) };
 		}
 		return 0;
-			
+
 		case WM_COMMAND:
 		{
 			const auto id_pressed{ LOWORD(wParam) };
-			
+
 			switch (id_pressed)
 			{
 			case kButtonSetSizeId:
 				MessageBox(hWnd, kMessageBoxButtonSetSizeClickedText, nullptr, NULL);
 				SetWindowPos(
-					hWnd, 
-					nullptr, 
-					kMainWindowX, kMainWindowY, kMainWindowWidth, kMainWindowHeight, 
+					hWnd,
+					nullptr,
+					kMainWindowX, kMainWindowY, kMainWindowWidth, kMainWindowHeight,
 					SWP_DRAWFRAME
 				);
 				break;
@@ -115,7 +116,7 @@ WNDCLASSEX configure_window_characteristics(const HINSTANCE& hInstance)
 		}
 		return 0;
 		}
-			
+
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	};
 
@@ -144,5 +145,4 @@ pointer to place for information about window (descriptor, kernel object)
 /*
 Events are driven with window messages.
 Everything is a window (button, window, scrollbar...)
-
 */
