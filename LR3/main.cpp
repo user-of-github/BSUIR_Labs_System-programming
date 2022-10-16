@@ -17,7 +17,6 @@ std::vector<int> merge_two_arrays(const std::vector<int> &, const std::vector<in
 
 // data for threads
 std::vector<int> first_part{};
-
 std::vector<int> second_part{};
 
 
@@ -29,6 +28,9 @@ DWORD WINAPI SortSecondPart(LPVOID);
 
 int main()
 {
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
+
     const std::size_t array_size{5000000};
     std::cout << "Test randomized array size: " << array_size << '\n';
 
@@ -66,7 +68,7 @@ int main()
         DWORD second_thread_id{};
         HANDLE threads[2]{};
 
-        threads[0] = CreateThread(NULL,0,SortFirstPart,NULL,0,&first_thread_id);
+        threads[0] = CreateThread(NULL, 0, SortFirstPart, NULL, 0, &first_thread_id);
         threads[1] = CreateThread(NULL, 0, SortSecondPart, NULL, 0, &second_thread_id);
 
         WaitForMultipleObjects(2, threads, TRUE, INFINITE);
