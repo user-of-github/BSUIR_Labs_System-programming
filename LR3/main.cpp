@@ -47,9 +47,7 @@ int main()
         const auto response{merge_two_arrays(first_sorted, second_sorted)};
         const auto stop_single_thread{std::chrono::high_resolution_clock::now()};
 
-        std::cout << "Time: "
-                  << duration_cast<std::chrono::microseconds>(stop_single_thread - start_single_thread).count()
-                  << " microseconds \n";
+        std::cout << "Time: " << duration_cast<std::chrono::microseconds>(stop_single_thread - start_single_thread).count() << " microseconds \n";
         //print_vector(response);
     }
 
@@ -63,7 +61,6 @@ int main()
 
         //print_vector(first_part);
         //print_vector(second_part);
-        std::cout << '\n';
 
         DWORD first_thread_id{};
         DWORD second_thread_id{};
@@ -76,16 +73,14 @@ int main()
         const auto response{merge_two_arrays(first_part, second_part)};
         const auto stop_double_thread{std::chrono::high_resolution_clock::now()};
 
-        std::cout << "Time: "<< duration_cast<std::chrono::microseconds>(stop_double_thread - start_double_thread).count() << " microseconds\n";
+        std::cout << "Time: " << duration_cast<std::chrono::microseconds>(stop_double_thread - start_double_thread).count() << " microseconds\n";
 
         CloseHandle(threads[0]);
         CloseHandle(threads[1]);
 
-
         //print_vector(first_part);
         //print_vector(second_part);
     }
-
 
     return 0;
 }
