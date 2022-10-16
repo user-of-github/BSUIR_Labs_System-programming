@@ -3,3 +3,8 @@
 out/
 .sln
 *.sln
+
+/.idea
+.idea
+/cmake-build-debug
+cmake-build-debug
