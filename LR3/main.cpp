@@ -2,7 +2,7 @@
 #include <vector>
 #include <windows.h>
 #include <chrono>
-
+#include <algorithm>
 
 std::vector<int> create_array_with_random_values(const std::size_t);
 
@@ -31,17 +31,19 @@ int main()
     std::cin.tie(NULL);
     std::cout.tie(NULL);
 
-    const std::size_t array_size{5000000};
+    const std::size_t array_size{10000000};
     std::cout << "Test randomized array size: " << array_size << '\n';
 
     const auto values{create_array_with_random_values(array_size)};
+    std::cout << "SOURCE: " << '\n';
+    print_vector(values);
 
     {
         std::cout << "SINGLE THREAD MODE: \n";
         const auto first_partt{get_subarray(values, 0, values.size() / 2 - 1)};
         const auto second_partt{get_subarray(values, values.size() / 2, values.size() - 1)};
 
-        //print_vector(values);
+
 
         const auto start_single_thread{std::chrono::high_resolution_clock::now()};
         const auto first_sorted{sorted(first_partt)};
@@ -50,16 +52,18 @@ int main()
         const auto stop_single_thread{std::chrono::high_resolution_clock::now()};
 
         std::cout << "Time: " << duration_cast<std::chrono::microseconds>(stop_single_thread - start_single_thread).count() << " microseconds \n";
-        //print_vector(response);
+        print_vector(response);
     }
 
     std::cout << "----------------\n";
 
     {
         std::cout << "DOUBLE THREAD MODE: \n";
+        std::cout << "SOURCE: " << '\n';
+        print_vector(values);
         const auto start_double_thread{std::chrono::high_resolution_clock::now()};
         first_part = get_subarray(values, 0, values.size() / 2 - 1);
-        second_part = get_subarray(values, values.size() / 2, values.size() / 2 - 1);
+        second_part = get_subarray(values, values.size() / 2, values.size() - 1);
 
         //print_vector(first_part);
         //print_vector(second_part);
@@ -68,10 +72,59 @@ int main()
         DWORD second_thread_id{};
         HANDLE threads[2]{};
 
-        threads[0] = CreateThread(NULL, 0, SortFirstPart, NULL, 0, &first_thread_id);
-        threads[1] = CreateThread(NULL, 0, SortSecondPart, NULL, 0, &second_thread_id);
+        threads[0] = CreateThread(
+                NULL,
+                0,
+                SortFirstPart,
+                NULL,
+                0,
+                &first_thread_id
+                );
 
-        WaitForMultipleObjects(2, threads, TRUE, INFINITE);
+        threads[1] = CreateThread(
+                NULL,
+                0,
+                SortSecondPart,
+                NULL,
+                0,
+                &second_thread_id
+                );
+
+        Sleep(100);
+        TerminateThread(threads[0], 1);
+
+        const DWORD threads_result {WaitForMultipleObjects(2, threads, TRUE, INFINITE)};
+
+        if (threads_result == WAIT_OBJECT_0)
+        {
+            DWORD exit_code1{};
+            DWORD exit_code2 {};
+            const BOOL first {GetExitCodeThread(threads[0], &exit_code1)};
+
+            const BOOL second {GetExitCodeThread(threads[1], &exit_code2)};
+            std::cout << "ERROR CODES OF THREADS: " << exit_code1 << ' ' << exit_code2 << '\n';
+
+            try
+            {
+                if (exit_code1 == 1) throw std::runtime_error("First thread was terminated !!");
+                if (exit_code2 == 1) throw std::runtime_error("Second thread was terminated !!");
+            }
+            catch(const std::exception &exception)
+            {
+                std::cout << exception.what() << " => EXITING PROGRAM";
+                CloseHandle(threads[0]);
+                CloseHandle(threads[1]);
+                exit(0);
+            }
+        }
+        else
+        {
+            std::cout << "WaitFoprMultipleObjects() FAILED\n";
+            CloseHandle(threads[0]);
+            CloseHandle(threads[1]);
+            exit(0);
+        }
+
         const auto response{merge_two_arrays(first_part, second_part)};
         const auto stop_double_thread{std::chrono::high_resolution_clock::now()};
 
@@ -82,6 +135,8 @@ int main()
 
         //print_vector(first_part);
         //print_vector(second_part);
+
+        print_vector(response);
     }
 
     return 0;
@@ -90,7 +145,7 @@ int main()
 
 std::vector<int> create_array_with_random_values(const std::size_t size)
 {
-    const auto kMaxNumberForArray{1000000};
+    const auto kMaxNumberForArray{1000000000};
 
     std::vector<int> response{};
     response.reserve(size);
@@ -115,17 +170,21 @@ std::vector<int> get_subarray(const std::vector<int> &source, const std::size_t 
 
 void print_vector(const std::vector<int> &array)
 {
-    for (const auto &item : array)
-        std::cout << item << ' ';
+    for (std::size_t counter {0}; counter < std::min(std::size_t{100}, array.size()); ++counter)
+        std::cout << array.at(counter) << ' ';
 
     std::cout << '\n';
 }
 
 std::vector<int> sorted(const std::vector<int> &source)
 {
-    std::vector<int> response{source};
+    std::vector<int> response {};
+    for (const auto item : source)
+    {
+        response.push_back(item);
+    }
 
-    std::sort(std::begin(response), std::end(response));
+    std::sort(response.begin(), response.end());
 
     return response;
 }
