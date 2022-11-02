@@ -4,6 +4,7 @@
 #include <chrono>
 #include <algorithm>
 
+
 std::vector<int> create_array_with_random_values(const std::size_t);
 
 std::vector<int> get_subarray(const std::vector<int> &, const std::size_t, const std::size_t);
@@ -62,6 +63,7 @@ int main()
         std::cout << "SOURCE: " << '\n';
         print_vector(values);
         const auto start_double_thread{std::chrono::high_resolution_clock::now()};
+
         first_part = get_subarray(values, 0, values.size() / 2 - 1);
         second_part = get_subarray(values, values.size() / 2, values.size() - 1);
 
