@@ -2,6 +2,7 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
+#include <array>
 
 
 const std::size_t kArrayLength{10};
@@ -24,19 +25,30 @@ DWORD WINAPI print_sorted_array(LPVOID);
 int main()
 {
     const constexpr std::size_t kThreadsCount{3};
-    HANDLE threads[kThreadsCount]{};
-    DWORD ids[kThreadsCount]{};
+
+    std::array<HANDLE, kThreadsCount> threads{};
+    std::array<DWORD, kThreadsCount> ids{};
 
     created_array_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     sorted_array_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 
+    const std::array<LPTHREAD_START_ROUTINE, kThreadsCount> thread_functions{create_array, sort_array, print_sorted_array};
 
-    threads[0] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) create_array, NULL, 0, &ids[0]);
-    threads[1] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) sort_array, NULL, 0, &ids[1]);
-    threads[2] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) print_sorted_array, NULL, 0, &ids[1]);
+    for (std::size_t counter{0}; counter < kThreadsCount; ++counter)
+    {
+        threads.at(counter) = CreateThread(
+                NULL,
+                0,
+                (LPTHREAD_START_ROUTINE) thread_functions.at(counter),
+                NULL,
+                0,
+                &ids.at(counter)
+        );
+    }
 
+    const auto threads_result{WaitForMultipleObjects(kThreadsCount, threads.data(), TRUE, INFINITE)};
 
-    const auto threads_result{WaitForMultipleObjects(kThreadsCount, threads, TRUE, INFINITE)};
+    if (threads_result == WAIT_OBJECT_0) {}
 
     CloseHandle(threads[0]);
     CloseHandle(threads[1]);
