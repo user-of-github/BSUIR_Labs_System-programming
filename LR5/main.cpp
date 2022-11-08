@@ -59,6 +59,7 @@ int main()
     return 0;
 }
 
+
 DWORD WINAPI create_array(LPVOID parameters)
 {
     std::srand(std::time(NULL));
