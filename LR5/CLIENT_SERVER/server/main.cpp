@@ -5,7 +5,7 @@
 
 int main()
 {
-    char lpszComLine[100]{}; // for lauching client process with command line args
+    char lpszComLine[100]{}; // for launching client process with command line args
     STARTUPINFO startup_info{};
     PROCESS_INFORMATION process_information{};
     HANDLE hWritePipe{};

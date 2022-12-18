@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     const std::size_t count{(std::size_t) atoi(argv[2])};
     std::cout << "Going to send " << count << " messages\n" << '\n';
 
-    
+
     std::cout << "Press any key to start communication.\n";
     _getch();
 
