@@ -1,5 +1,9 @@
 #include <iostream>
 #include <winsock2.h>
+#include "main.hpp"
+#include <fstream>
+#include <ctime>
+#include <iomanip>
 
 
 void run_server(const SOCKET &, const SOCKADDR_IN &);
@@ -21,7 +25,10 @@ int main()
     // AF_INET => with type of address ipv4 (4 bytes address)
     // SOCK_STREAM => protocol TCP used
     // 0 => unused, so leave as 0
-    SOCKET socket_handle{socket(AF_INET, SOCK_STREAM, 0)};
+
+    // or SOCK_STREAM 0
+    // or SOCK_DGRAM IPPROTO_UDP
+    SOCKET socket_handle{socket(AF_INET, SOCK__DGRAM, IPPROTO__UDP)};
 
     // stores connection settings
     SOCKADDR_IN socket_information{};
@@ -31,14 +38,13 @@ int main()
 
     char choice{};
     std::cout << "s => server" << '\n' << "c => client" << '\n';
-    std::cin >> choice;
 
-    if (choice == 'c')
+
+    if (std::cin >> choice; choice == 'c')
         run_client(socket_handle, socket_information);
     else if (choice == 's')
         run_server(socket_handle, socket_information);
-
-
+    
     closesocket(socket_handle);
 
     return 0;
@@ -54,12 +60,19 @@ void run_client(const SOCKET &socket_handle, SOCKADDR_IN &socket_information)
     char message[kMaxMessageBufferSize];
     std::cin >> message;
 
+    while (std::string{message} != "kek") {
+        std::cin >> message;
+        send(socket_handle, message, kMaxMessageBufferSize, 0);
+    }
     // socket descriptor, pointer to buffer, buffer size
-    send(socket_handle, message, kMaxMessageBufferSize, 0);
+    //send(socket_handle, message, kMaxMessageBufferSize, 0);
 }
 
 void run_server(const SOCKET &socket_handle, const SOCKADDR_IN &socket_information)
 {
+    std::ofstream myfile;
+    myfile.open ("example.txt");
+
     bind(socket_handle, reinterpret_cast<const sockaddr *>(&socket_information), sizeof(socket_information));
 
     //socket, queue size
@@ -78,6 +91,15 @@ void run_server(const SOCKET &socket_handle, const SOCKADDR_IN &socket_informati
         std::cout << "Connection OK" << '\n';
 
         while (recv(client_socket, buf, sizeof(buf), 0) > 0)
+        {
             std::cout << buf << '\n';
+            const auto t = std::time(nullptr);
+            const auto tm = *std::localtime(&t);
+            myfile << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << ' ';
+            myfile << buf;
+            myfile << '\n';
+            //write << reinterpret_cast<std::ios_base &(*)(std::ios_base &)>('\n');
+        }
+        myfile.close();
     }
 }
